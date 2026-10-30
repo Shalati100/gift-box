@@ -1,4 +1,5 @@
-```html
+
+   ```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,7 +16,7 @@
 body {
     margin: 0;
     min-height: 100vh;
-    display: flex; 
+    display: flex;
     justify-content: center;
     align-items: center;
     padding: 20px;
@@ -120,7 +121,7 @@ button:hover {
 }
 
 .hidden {
-    display: none;
+    display: none !important;
 }
 
 .note {
@@ -128,6 +129,20 @@ button:hover {
     font-size: 13px;
     line-height: 1.6;
     margin-top: 20px;
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 12px;
+    }
+
+    .container {
+        padding: 25px 18px;
+    }
+
+    .gift {
+        font-size: 85px;
+    }
 }
 </style>
 </head>
@@ -150,7 +165,7 @@ button:hover {
     <!-- NAME ENTRY SCREEN -->
     <section id="entryScreen">
 
-        <div class="gift">🎁</div>
+        <div class="gift" aria-hidden="true">🎁</div>
 
         <label for="personName">ENTER YOUR NAME</label>
 
@@ -162,11 +177,19 @@ button:hover {
             autocomplete="off"
         >
 
-        <button class="open-button" onclick="openGift()">
+        <button
+            type="button"
+            class="open-button"
+            id="openButton">
             🔒 UNLOCK MY GIFT
         </button>
 
-        <div class="message" id="message"></div>
+        <div
+            class="message"
+            id="message"
+            role="status"
+            aria-live="polite">
+        </div>
 
         <p class="note">
             Your recipient is a secret. Please do not share
@@ -175,11 +198,10 @@ button:hover {
 
     </section>
 
-
     <!-- GIFT REVEAL SCREEN -->
-    <section id="giftScreen" class="hidden">
+    <section id="giftScreen" class="hidden" aria-live="polite">
 
-        <div class="gift">🎁✨</div>
+        <div class="gift" aria-hidden="true">🎁✨</div>
 
         <p class="subtitle" id="welcome"></p>
 
@@ -195,7 +217,10 @@ button:hover {
 
         </div>
 
-        <button class="back-button" onclick="goBack()">
+        <button
+            type="button"
+            class="back-button"
+            id="backButton">
             ← BACK TO NAME ENTRY
         </button>
 
@@ -204,36 +229,45 @@ button:hover {
 </div>
 
 <script>
+"use strict";
 
-// Gift assignments
+// Gift assignments.
+// Names are stored in lowercase so matching is not case-sensitive.
 const assignments = {
-    "Julia": "Phumu",
-    "Rolie L": "Thau",
-    "Rolie M": "Zwivhuya",
-    "Phumu": "Shonie",
-    "Shonie": "Rolie M",
-    "Thau": "Rolie L",
-    "Thendo": "Julia",
-    "Zwivhuya": "Thendo",
-    
+    "julia": "Phumu",
+    "rolie l": "Thau",
+    "rolie m": "Zwivhuya",
+    "phumu": "Shonie",
+    "shonie": "Rolie M",
+    "thau": "Rolie L",
+    "thendo": "Julia",
+    "zwivhuya": "Thendo"
 };
 
+// Get page elements
+const input = document.getElementById("personName");
+const message = document.getElementById("message");
+const entryScreen = document.getElementById("entryScreen");
+const giftScreen = document.getElementById("giftScreen");
+const welcome = document.getElementById("welcome");
+const recipient = document.getElementById("recipient");
 
 // Open the gift
 function openGift() {
 
-    const input = document.getElementById("personName");
     const name = input.value.trim();
-    const message = document.getElementById("message");
 
+    // Check for an empty name
     if (name === "") {
         message.textContent = "Please enter your name first!";
         input.focus();
         return;
     }
 
-    const key = name.toLocaleLowerCase();
+    // Ignore uppercase/lowercase differences and extra spaces
+    const key = name.toLocaleLowerCase().replace(/\s+/g, " ");
 
+    // Check whether the participant exists
     if (!Object.prototype.hasOwnProperty.call(assignments, key)) {
         message.textContent =
             "Name not found. Please check your spelling and try again.";
@@ -241,44 +275,46 @@ function openGift() {
         return;
     }
 
-    // Display only this person's recipient
-    document.getElementById("welcome").textContent =
+    // Display only the selected participant's recipient
+    welcome.textContent =
         "Hello, " + name + "! Your mystery has been unlocked.";
 
-    document.getElementById("recipient").textContent =
-        assignments[key];
+    recipient.textContent = assignments[key];
 
-    document.getElementById("entryScreen").classList.add("hidden");
-    document.getElementById("giftScreen").classList.remove("hidden");
+    message.textContent = "";
 
+    entryScreen.classList.add("hidden");
+    giftScreen.classList.remove("hidden");
 }
 
-
-// Return to the name entry screen
+// Return to name entry
 function goBack() {
 
-    document.getElementById("giftScreen").classList.add("hidden");
-    document.getElementById("entryScreen").classList.remove("hidden");
+    giftScreen.classList.add("hidden");
+    entryScreen.classList.remove("hidden");
 
-    document.getElementById("personName").value = "";
-    document.getElementById("message").textContent = "";
+    input.value = "";
+    message.textContent = "";
+    recipient.textContent = "";
+    welcome.textContent = "";
 
-    document.getElementById("recipient").textContent = "";
-    document.getElementById("welcome").textContent = "";
-
-    document.getElementById("personName").focus();
-
+    input.focus();
 }
 
+// Button click
+document.getElementById("openButton")
+    .addEventListener("click", openGift);
 
-// Allow Enter key to open the gift
-document.getElementById("personName").addEventListener("keydown", function(event) {
-
+// Enter key
+input.addEventListener("keydown", function(event) {
     if (event.key === "Enter") {
         openGift();
     }
-
 });
+
+// Back button
+document.getElementById("backButton")
+    .addEventListener("click", goBack);
 
 </script>
 
